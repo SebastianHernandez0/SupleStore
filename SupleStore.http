@@ -1,0 +1,6 @@
+@SupleStore_HostAddress = http://localhost:5217
+
+GET {{SupleStore_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
