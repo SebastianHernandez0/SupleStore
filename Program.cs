@@ -1,5 +1,8 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using SupleStore.DTOs;
 using SupleStore.Models;
+using SupleStore.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +20,10 @@ builder.Services.AddDbContext<Context>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
+//Validators
 
+builder.Services.AddScoped<IValidator<ProductoInsertDto>, ProductInsertValidator>();
+builder.Services.AddScoped<IValidator<ProductoUpdateDto>, ProductUpdateValidator>();
 
 
 

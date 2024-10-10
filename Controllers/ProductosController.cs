@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,10 +13,16 @@ namespace SupleStore.Controllers
     public class ProductosController : ControllerBase
     {
         private Context _context;
+        private IValidator<ProductoInsertDto> _productoInsertValidator;
+        private IValidator<ProductoUpdateDto> _productoUpdateValidator;
 
-        public ProductosController(Context context)
+        public ProductosController(Context context,
+            IValidator<ProductoInsertDto> productoInsertValidator,
+            IValidator<ProductoUpdateDto> productoUpdateValidator)
         {
             _context = context;
+            _productoInsertValidator = productoInsertValidator;
+            _productoUpdateValidator = productoUpdateValidator;
         }
 
         [HttpGet]
@@ -59,6 +66,20 @@ namespace SupleStore.Controllers
 
         public async Task<ActionResult<ProductosDto>> Add(ProductoInsertDto productoInsertDto)
         {
+            
+
+            var validationResult= await _productoInsertValidator.ValidateAsync(productoInsertDto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors);
+            }
+
+            var productoExistente = await _context.Productos.FirstOrDefaultAsync(p => p.Name.ToLower() == productoInsertDto.Name.ToLower());
+            if(productoExistente != null)
+            {
+                return Conflict(new { message = "Ya existe un producto con ese nombre" });
+            }
+
             var Producto = new Productos
             {
                 Name = productoInsertDto.Name,
@@ -82,8 +103,13 @@ namespace SupleStore.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult<ProductosDto>> Update(int id, ProductoInsertDto productoInsertDto)
+        public async Task<ActionResult<ProductosDto>> Update(int id, ProductoUpdateDto productoUpdateDto)
         {
+            var validationResult = await _productoUpdateValidator.ValidateAsync(productoUpdateDto);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest(validationResult.Errors);
+            }
             var producto = await _context.Productos.FindAsync(id);
 
             if (producto == null)
@@ -91,10 +117,10 @@ namespace SupleStore.Controllers
                 return NotFound();
             }
 
-            producto.Name = productoInsertDto.Name;
-            producto.Image = productoInsertDto.Image;
-            producto.precio = productoInsertDto.precio;
-            producto.CategoryId = productoInsertDto.CategoryId;
+            producto.Name = productoUpdateDto.Name;
+            producto.Image = productoUpdateDto.Image;
+            producto.precio = productoUpdateDto.precio;
+            producto.CategoryId = productoUpdateDto.CategoryId;
 
             await _context.SaveChangesAsync();
 
