@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SupleStore.DTOs;
@@ -21,7 +22,7 @@ namespace SupleStore.Controllers
 
         public async Task<IEnumerable<ProductosDto>> Get()
         {
-            return await _context.Productos.Select(p=> new ProductosDto
+            return await _context.Productos.Select(p => new ProductosDto
             {
                 Id = p.Id,
                 Name = p.Name,
@@ -79,5 +80,47 @@ namespace SupleStore.Controllers
             };
             return CreatedAtAction(nameof(GetById), new { id = Producto.Id }, productoDto);
         }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<ProductosDto>> Update(int id, ProductoInsertDto productoInsertDto)
+        {
+            var producto = await _context.Productos.FindAsync(id);
+
+            if (producto == null)
+            {
+                return NotFound();
+            }
+
+            producto.Name = productoInsertDto.Name;
+            producto.Image = productoInsertDto.Image;
+            producto.precio = productoInsertDto.precio;
+            producto.CategoryId = productoInsertDto.CategoryId;
+
+            await _context.SaveChangesAsync();
+
+            var productoDto = new ProductosDto
+            {
+                Id = producto.Id,
+                Name = producto.Name,
+                Image = producto.Image,
+                precio = producto.precio,
+                CategoryId = producto.CategoryId
+            };
+            return Ok(productoDto);
+        }
+        [HttpDelete("{id}")]
+
+        public async Task<ActionResult> Delete(int id)
+        {
+            var producto = await _context.Productos.FindAsync(id);
+            if (producto == null)
+            {
+                return NotFound();
+            }
+            _context.Remove(producto);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
     }
+
 }
