@@ -23,7 +23,7 @@ namespace SupleStore.Controllers
         {
             return await _context.Categorias.Select(c => new CategorysDto
             {
-                I = c.CategoryId,
+                CategoryId = c.CategoryId,
                 CategoryName = c.CategoryName
             }).ToListAsync();
 
@@ -48,6 +48,45 @@ namespace SupleStore.Controllers
             };
 
             return Ok(categoryDto);
+        }
+
+        [HttpPut("{id}")]
+
+        public async Task<ActionResult<CategorysDto>> Update(int id, CategoryUpdateDto categoryUpdateDto)
+        {
+            var category = await _context.Categorias.FindAsync(id);
+
+            if (category == null)
+            {
+                return NotFound();
+            }
+
+            category.CategoryName = categoryUpdateDto.CategoryName;
+            await _context.SaveChangesAsync();
+
+            var categoryDto = new CategorysDto
+            {
+                CategoryId = category.CategoryId,
+                CategoryName = category.CategoryName
+            };
+
+            return Ok(categoryDto);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> Delete(int id)
+        {
+            var category = await _context.Categorias.FindAsync(id);
+
+            if (category == null)
+            {
+                return NotFound();
+            }
+
+            _context.Categorias.Remove(category);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }
