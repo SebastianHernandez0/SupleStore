@@ -2,11 +2,14 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SupleStore.DTOs;
 using SupleStore.Models;
+using SupleStore.Services;
 using SupleStore.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddScoped<IProductoService, ProductoService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

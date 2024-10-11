@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SupleStore.DTOs;
 using SupleStore.Models;
+using SupleStore.Services;
 
 namespace SupleStore.Controllers
 {
@@ -15,51 +16,34 @@ namespace SupleStore.Controllers
         private Context _context;
         private IValidator<ProductoInsertDto> _productoInsertValidator;
         private IValidator<ProductoUpdateDto> _productoUpdateValidator;
+        private IProductoService _productoService;
 
         public ProductosController(Context context,
             IValidator<ProductoInsertDto> productoInsertValidator,
-            IValidator<ProductoUpdateDto> productoUpdateValidator)
+            IValidator<ProductoUpdateDto> productoUpdateValidator,
+            IProductoService productoService )
         {
             _context = context;
             _productoInsertValidator = productoInsertValidator;
             _productoUpdateValidator = productoUpdateValidator;
+            _productoService = productoService;
         }
 
         [HttpGet]
 
         public async Task<IEnumerable<ProductosDto>> Get()
         {
-            return await _context.Productos.Select(p => new ProductosDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Image = p.Image,
-                precio = p.precio,
-                CategoryId = p.CategoryId,
-                CategoryName = p.Categorias.CategoryName
-            }).ToListAsync();
+           return await _productoService.Get();
         }
 
         [HttpGet("{id}")]
 
         public async Task<ActionResult<ProductosDto>> GetById(int id)
         {
-            var producto = await _context.Productos.Include(p => p.Categorias).FirstOrDefaultAsync(p => p.Id == id);
+            var producto = await _productoService.GetById(id);
+            
+            return producto == null ? NotFound() : Ok(producto);
 
-            if (producto == null)
-            {
-                return NotFound();
-            }
-            var productoDto = new ProductosDto
-            {
-                Id = producto.Id,
-                Name = producto.Name,
-                Image = producto.Image,
-                precio = producto.precio,
-                CategoryId = producto.CategoryId,
-                CategoryName = producto.Categorias.CategoryName
-            };
-            return Ok(productoDto);
         }
 
         [HttpPost]
@@ -75,31 +59,14 @@ namespace SupleStore.Controllers
             }
 
             var productoExistente = await _context.Productos.FirstOrDefaultAsync(p => p.Name.ToLower() == productoInsertDto.Name.ToLower());
-            if(productoExistente != null)
+            if (productoExistente != null)
             {
                 return Conflict(new { message = "Ya existe un producto con ese nombre" });
             }
 
-            var Producto = new Productos
-            {
-                Name = productoInsertDto.Name,
-                Image = productoInsertDto.Image,
-                precio = productoInsertDto.precio,
-                CategoryId = productoInsertDto.CategoryId
-            };
-            await _context.Productos.AddAsync(Producto);
-            await _context.SaveChangesAsync();
+            var productoDto = await _productoService.Add(productoInsertDto);
 
-            var productoDto = new ProductosDto
-            {
-                Id = Producto.Id,
-                Name = Producto.Name,
-                Image = Producto.Image,
-                precio = Producto.precio,
-                CategoryId = Producto.CategoryId
-
-            };
-            return CreatedAtAction(nameof(GetById), new { id = Producto.Id }, productoDto);
+            return CreatedAtAction(nameof(GetById), new { id = productoDto.Id }, productoDto);
         }
 
         [HttpPut("{id}")]
@@ -110,42 +77,19 @@ namespace SupleStore.Controllers
             {
                 return BadRequest(validationResult.Errors);
             }
-            var producto = await _context.Productos.FindAsync(id);
 
-            if (producto == null)
-            {
-                return NotFound();
-            }
+            var productoDto = await _productoService.Update(id, productoUpdateDto);
 
-            producto.Name = productoUpdateDto.Name;
-            producto.Image = productoUpdateDto.Image;
-            producto.precio = productoUpdateDto.precio;
-            producto.CategoryId = productoUpdateDto.CategoryId;
-
-            await _context.SaveChangesAsync();
-
-            var productoDto = new ProductosDto
-            {
-                Id = producto.Id,
-                Name = producto.Name,
-                Image = producto.Image,
-                precio = producto.precio,
-                CategoryId = producto.CategoryId
-            };
-            return Ok(productoDto);
+            return productoDto == null ? NotFound() : Ok(productoDto);
         }
         [HttpDelete("{id}")]
 
-        public async Task<ActionResult> Delete(int id)
+        public async Task<ActionResult<ProductosDto>> Delete(int id)
         {
-            var producto = await _context.Productos.FindAsync(id);
-            if (producto == null)
-            {
-                return NotFound();
-            }
-            _context.Remove(producto);
-            await _context.SaveChangesAsync();
-            return NoContent();
+            var productoDto = await _productoService.Delete(id);
+
+            return productoDto == null ? NotFound() : Ok(productoDto);
+
         }
     }
 
