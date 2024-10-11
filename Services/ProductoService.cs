@@ -4,7 +4,7 @@ using SupleStore.Models;
 
 namespace SupleStore.Services
 {
-    public class ProductoService : IProductoService
+    public class ProductoService : ICommonService<ProductosDto, ProductoInsertDto, ProductoUpdateDto>
     {
         private Context _context;
 

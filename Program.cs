@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddScoped<IProductoService, ProductoService>();
+builder.Services.AddKeyedScoped<ICommonService<ProductosDto, ProductoInsertDto, ProductoUpdateDto>, ProductoService>("productService");
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

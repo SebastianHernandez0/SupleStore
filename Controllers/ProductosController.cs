@@ -16,12 +16,12 @@ namespace SupleStore.Controllers
         private Context _context;
         private IValidator<ProductoInsertDto> _productoInsertValidator;
         private IValidator<ProductoUpdateDto> _productoUpdateValidator;
-        private IProductoService _productoService;
+        private ICommonService<ProductosDto,ProductoInsertDto,ProductoUpdateDto> _productoService;
 
         public ProductosController(Context context,
             IValidator<ProductoInsertDto> productoInsertValidator,
             IValidator<ProductoUpdateDto> productoUpdateValidator,
-            IProductoService productoService )
+            [FromKeyedServices("productService")]ICommonService<ProductosDto, ProductoInsertDto, ProductoUpdateDto> productoService )
         {
             _context = context;
             _productoInsertValidator = productoInsertValidator;
