@@ -48,11 +48,11 @@ namespace SupleStore.Controllers
 
         [HttpPost]
 
-        public async Task<ActionResult<ProductosDto>> Add(ProductoInsertDto productoInsertDto)
+        public async Task<ActionResult> Add(ProductoInsertDto productoInsertDto)
         {
-            
 
-            var validationResult= await _productoInsertValidator.ValidateAsync(productoInsertDto);
+
+            var validationResult = await _productoInsertValidator.ValidateAsync(productoInsertDto);
             if (!validationResult.IsValid)
             {
                 return BadRequest(validationResult.Errors);
@@ -66,8 +66,17 @@ namespace SupleStore.Controllers
 
             var productoDto = await _productoService.Add(productoInsertDto);
 
-            return CreatedAtAction(nameof(GetById), new { id = productoDto.Id }, productoDto);
+            var producto = await _productoService.GetById(productoDto.Id);
+
+            return CreatedAtAction(nameof(GetById), new { id = productoDto.Id },
+            new
+            {
+                message = "Producto creado exitosamente",
+                producto = producto
+            });
         }
+
+
 
         [HttpPut("{id}")]
         public async Task<ActionResult<ProductosDto>> Update(int id, ProductoUpdateDto productoUpdateDto)

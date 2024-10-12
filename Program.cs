@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SupleStore.DTOs;
 using SupleStore.Models;
+using SupleStore.Repository;
 using SupleStore.Services;
 using SupleStore.Validators;
 
@@ -15,6 +16,11 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+
+//Repository
+
+builder.Services.AddScoped<IRepository<Productos>, ProductRepository>();
 
 //Entity Framework
 

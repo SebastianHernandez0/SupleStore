@@ -1,34 +1,40 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SupleStore.DTOs;
 using SupleStore.Models;
+using SupleStore.Repository;
 
 namespace SupleStore.Services
 {
     public class ProductoService : ICommonService<ProductosDto, ProductoInsertDto, ProductoUpdateDto>
     {
-        private Context _context;
+     
+        private IRepository<Productos> _productosRepository;
 
-        public ProductoService(Context context)
+        public ProductoService(Context context,
+                IRepository<Productos> productosRepository)
         {
-            _context = context;
+            
+            _productosRepository = productosRepository;
         }
 
         public async Task<IEnumerable<ProductosDto>> Get()
         {
-            return await _context.Productos.Select(p => new ProductosDto
+            var productos = await _productosRepository.Get();
+
+            return productos.Select(p => new ProductosDto()
             {
                 Id = p.Id,
                 Name = p.Name,
                 Image = p.Image,
                 precio = p.precio,
                 CategoryId = p.CategoryId,
-                CategoryName = p.Categorias.CategoryName
-            }).ToListAsync();
+                CategoryName = p.Categorias.CategoryName 
+            });
         }
 
         public async Task<ProductosDto> GetById(int id)
         {
-            var producto = await _context.Productos.Include(p => p.Categorias).FirstOrDefaultAsync(p => p.Id == id);
+            var producto= await _productosRepository.GetById(id);
 
             if (producto != null)
             {
@@ -57,8 +63,8 @@ namespace SupleStore.Services
                 precio = productoInsertDto.precio,
                 CategoryId = productoInsertDto.CategoryId
             };
-            await _context.Productos.AddAsync(Producto);
-            await _context.SaveChangesAsync();
+            await _productosRepository.Add(Producto);
+            await _productosRepository.Save();
 
             var productoDto = new ProductosDto
             {
@@ -74,7 +80,7 @@ namespace SupleStore.Services
         }
         public async Task<ProductosDto> Update(int id, ProductoUpdateDto productoUpdateDto)
         {
-            var producto = await _context.Productos.FindAsync(id);
+            var producto = await _productosRepository.GetById(id);
 
             if (producto != null)
             {
@@ -83,7 +89,8 @@ namespace SupleStore.Services
                 producto.precio = productoUpdateDto.precio;
                 producto.CategoryId = productoUpdateDto.CategoryId;
 
-                await _context.SaveChangesAsync();
+                _productosRepository.Update(producto);
+                await _productosRepository.Save();
 
                 var productoDto = new ProductosDto
                 {
@@ -102,11 +109,11 @@ namespace SupleStore.Services
         }
         public async Task<ProductosDto> Delete(int id)
         {
-            var producto = await _context.Productos.FindAsync(id);
+            var producto = await _productosRepository.GetById(id);
             if (producto != null)
             {
-                _context.Remove(producto);
-                await _context.SaveChangesAsync();
+                _productosRepository.Delete(producto);
+                await _productosRepository.Save();
 
                 var productoDto = new ProductosDto
                 {
@@ -114,7 +121,8 @@ namespace SupleStore.Services
                     Name = producto.Name,
                     Image = producto.Image,
                     precio = producto.precio,
-                    CategoryId = producto.CategoryId
+                    CategoryId = producto.CategoryId,
+                    CategoryName= producto.Categorias.CategoryName
                 };
                 return productoDto;
             }
