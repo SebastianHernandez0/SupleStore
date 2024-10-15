@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using SupleStore.Automappers;
 using SupleStore.DTOs;
 using SupleStore.Models;
 using SupleStore.Repository;
@@ -35,7 +36,9 @@ builder.Services.AddScoped<IValidator<ProductoInsertDto>, ProductInsertValidator
 builder.Services.AddScoped<IValidator<ProductoUpdateDto>, ProductUpdateValidator>();
 
 
+//Mappers
 
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 
 

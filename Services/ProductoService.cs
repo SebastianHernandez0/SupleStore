@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using SupleStore.DTOs;
 using SupleStore.Models;
 using SupleStore.Repository;
@@ -9,27 +10,22 @@ namespace SupleStore.Services
     {
      
         private IRepository<Productos> _productosRepository;
+        private IMapper _mapper;
 
         public ProductoService(Context context,
-                IRepository<Productos> productosRepository)
+                IRepository<Productos> productosRepository,
+                IMapper mapper)
         {
             
             _productosRepository = productosRepository;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<ProductosDto>> Get()
         {
             var productos = await _productosRepository.Get();
 
-            return productos.Select(p => new ProductosDto()
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Image = p.Image,
-                precio = p.precio,
-                CategoryId = p.CategoryId,
-                CategoryName = p.Categorias.CategoryName 
-            });
+            return productos.Select(p => _mapper.Map<ProductosDto>(p));
         }
 
         public async Task<ProductosDto> GetById(int id)
@@ -38,15 +34,7 @@ namespace SupleStore.Services
 
             if (producto != null)
             {
-                var productoDto = new ProductosDto
-                {
-                    Id = producto.Id,
-                    Name = producto.Name,
-                    Image = producto.Image,
-                    precio = producto.precio,
-                    CategoryId = producto.CategoryId,
-                    CategoryName = producto.Categorias.CategoryName
-                };
+                var productoDto = _mapper.Map<ProductosDto>(producto);
                 return productoDto;
             }
             return null;
@@ -56,25 +44,12 @@ namespace SupleStore.Services
         {
             
 
-            var Producto = new Productos
-            {
-                Name = productoInsertDto.Name,
-                Image = productoInsertDto.Image,
-                precio = productoInsertDto.precio,
-                CategoryId = productoInsertDto.CategoryId
-            };
+            var Producto = _mapper.Map<Productos>(productoInsertDto);
+
             await _productosRepository.Add(Producto);
             await _productosRepository.Save();
 
-            var productoDto = new ProductosDto
-            {
-                Id = Producto.Id,
-                Name = Producto.Name,
-                Image = Producto.Image,
-                precio = Producto.precio,
-                CategoryId = Producto.CategoryId
-
-            };
+            var productoDto = _mapper.Map<ProductosDto>(Producto);
 
             return productoDto;
         }
@@ -92,14 +67,7 @@ namespace SupleStore.Services
                 _productosRepository.Update(producto);
                 await _productosRepository.Save();
 
-                var productoDto = new ProductosDto
-                {
-                    Id = producto.Id,
-                    Name = producto.Name,
-                    Image = producto.Image,
-                    precio = producto.precio,
-                    CategoryId = producto.CategoryId
-                };
+                var productoDto = _mapper.Map<ProductosDto>(producto);
 
                 return productoDto;
             }
@@ -115,15 +83,7 @@ namespace SupleStore.Services
                 _productosRepository.Delete(producto);
                 await _productosRepository.Save();
 
-                var productoDto = new ProductosDto
-                {
-                    Id = producto.Id,
-                    Name = producto.Name,
-                    Image = producto.Image,
-                    precio = producto.precio,
-                    CategoryId = producto.CategoryId,
-                    CategoryName= producto.Categorias.CategoryName
-                };
+                var productoDto = _mapper.Map<ProductosDto>(producto);
                 return productoDto;
             }
 
